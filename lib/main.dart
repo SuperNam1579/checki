@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'pages/auth/login_page.dart';
-import 'pages/attendance/home_page.dart';
 import 'pages/auth/register_page.dart';
+import 'pages/attendance/home_page.dart';
 
 void main() {
   runApp(const CheckInApp());
@@ -16,11 +16,9 @@ class CheckInApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'ระบบเช็คชื่อ',
-
-     theme: ThemeData(
-  textTheme: GoogleFonts.kanitTextTheme(), // ✅ ใช้ฟ้อน Kanit ทั้งแอป
-),
-
+      theme: ThemeData(
+        textTheme: GoogleFonts.kanitTextTheme(),
+      ),
       initialRoute: '/login',
       routes: {
         '/login': (context) => const LoginPage(),

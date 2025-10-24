@@ -17,7 +17,7 @@ class _HomePageState extends State<HomePage> {
     final now = DateTime.now();
     final formattedTime = DateFormat('HH:mm').format(now);
 
-    // เด้ง popup
+    // Popup แสดงผล
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -50,10 +50,7 @@ class _HomePageState extends State<HomePage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF6A11CB),
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 40,
-                  vertical: 12,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -72,24 +69,20 @@ class _HomePageState extends State<HomePage> {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              Color(0xFF6A11CB), // ม่วงเข้ม
-              Color(0xFF2575FC), // ฟ้าน้ำทะเล
-            ],
+            colors: [Color(0xFF6A11CB), Color(0xFF2575FC)], // ม่วง-น้ำเงิน
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
         ),
-
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ชื่อผู้ใช้
+            // Header
             Text(
-              "สวัสดี, น้ำ",
+              "สวัสดี, น้ำ 👋",
               style: GoogleFonts.kanit(
-                fontSize: 20,
+                fontSize: 22,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
@@ -104,20 +97,37 @@ class _HomePageState extends State<HomePage> {
             Center(
               child: GestureDetector(
                 onTap: checkedIn ? null : _checkIn,
-                child: Container(
-                  width: 150,
-                  height: 150,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  width: 160,
+                  height: 160,
                   decoration: BoxDecoration(
-                    color: checkedIn ? Colors.white24 : Colors.white,
                     shape: BoxShape.circle,
+                    gradient: checkedIn
+                        ? const LinearGradient(
+                            colors: [Colors.white24, Colors.white10],
+                          )
+                        : const LinearGradient(
+                            colors: [Colors.white, Colors.white70],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                    boxShadow: [
+                      if (!checkedIn)
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.15),
+                          blurRadius: 10,
+                          offset: const Offset(2, 4),
+                        ),
+                    ],
                   ),
                   child: Center(
                     child: Text(
                       checkedIn ? "เช็คชื่อแล้ว" : "เช็คชื่อ",
                       style: GoogleFonts.kanit(
-                        fontSize: 18,
+                        fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: checkedIn ? Colors.purple[200] : Colors.purple,
+                        color: checkedIn ? Colors.purple[200] : Colors.deepPurple,
                       ),
                     ),
                   ),
@@ -126,20 +136,33 @@ class _HomePageState extends State<HomePage> {
             ),
 
             const SizedBox(height: 60),
+
+            // ประวัติ
             Text(
               "กิจกรรมล่าสุด",
               style: GoogleFonts.kanit(
-                fontSize: 16,
-                color: Colors.white,
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
+                color: Colors.white,
               ),
             ),
             const SizedBox(height: 8),
-            Text(
-              checkedIn
-                  ? "คุณเช็คชื่อเวลา $checkInTime"
-                  : "ยังไม่มีประวัติการเช็คชื่อ",
-              style: GoogleFonts.kanit(color: Colors.white70),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                checkedIn
+                    ? "คุณเช็คชื่อเวลา $checkInTime"
+                    : "ยังไม่มีประวัติการเช็คชื่อ",
+                style: GoogleFonts.kanit(
+                  color: Colors.white,
+                  fontSize: 16,
+                ),
+              ),
             ),
           ],
         ),

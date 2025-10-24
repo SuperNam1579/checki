@@ -1,51 +1,69 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
-import '../../providers/auth_provider.dart';
+import '../../services/api_service.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+class RegisterPage extends StatefulWidget {
+  const RegisterPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<RegisterPage> createState() => _RegisterPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _RegisterPageState extends State<RegisterPage> {
+  final _nameController = TextEditingController();
   final _studentIdController = TextEditingController();
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmController = TextEditingController();
 
-  /// ✅ ฟังก์ชันเข้าสู่ระบบ (เรียกผ่าน AuthProvider → ApiService)
-  void _login() async {
+  Future<void> _register() async {
+    final name = _nameController.text.trim();
     final studentId = _studentIdController.text.trim();
-    final password = _passwordController.text;
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+    final confirm = _confirmController.text.trim();
 
-    if (studentId.isEmpty || password.isEmpty) {
-      _showPopup('กรุณากรอกข้อมูลให้ครบถ้วน', Colors.redAccent);
+    if (name.isEmpty ||
+        studentId.isEmpty ||
+        email.isEmpty ||
+        password.isEmpty ||
+        confirm.isEmpty) {
+      _showPopup("กรอกข้อมูลให้ครบทุกช่อง", Colors.redAccent);
+      return;
+    }
+
+    if (password != confirm) {
+      _showPopup("รหัสผ่านไม่ตรงกัน", Colors.redAccent);
       return;
     }
 
     try {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final success = await authProvider.login(studentId, password);
+      final response = await ApiService.register({
+        'device_id': 'flutter_app_001',
+        'student_id': studentId,
+        'name': name,
+        'email': email,
+        'password': password,
+        'rePassword': confirm,
+      });
 
-      if (success) {
-        _showPopup('เข้าสู่ระบบสำเร็จ', Colors.green);
-        Future.delayed(const Duration(seconds: 1), () {
-          Navigator.pushReplacementNamed(context, '/home');
-        });
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 201) {
+        _showPopup("สมัครสมาชิกสำเร็จ!", Colors.green);
       } else {
-        _showPopup('รหัสนิสิตหรือรหัสผ่านไม่ถูกต้อง', Colors.redAccent);
+        _showPopup(data['message'] ?? "สมัครไม่สำเร็จ", Colors.redAccent);
       }
     } catch (e) {
-      _showPopup('เกิดข้อผิดพลาดในการเชื่อมต่อ', Colors.redAccent);
+      _showPopup("เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์", Colors.redAccent);
     }
   }
 
-  /// ✅ Popup แสดงผลการเข้าสู่ระบบ
   void _showPopup(String message, Color color) {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         contentPadding: const EdgeInsets.all(24),
         content: Column(
@@ -59,6 +77,7 @@ class _LoginPageState extends State<LoginPage> {
             const SizedBox(height: 16),
             Text(
               message,
+              textAlign: TextAlign.center,
               style: GoogleFonts.kanit(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -67,14 +86,19 @@ class _LoginPageState extends State<LoginPage> {
             ),
             const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () {
+                Navigator.pop(context);
+                if (color == Colors.green) {
+                  Navigator.pushReplacementNamed(context, '/login');
+                }
+              },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF6A11CB),
+                backgroundColor: const Color(0xFF1976D2),
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
+                    borderRadius: BorderRadius.circular(10)),
               ),
               child: Text('ตกลง', style: GoogleFonts.kanit(fontSize: 16)),
             ),
@@ -84,103 +108,86 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  /// ✅ ส่วน UI
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const CircleAvatar(
-                  radius: 40,
-                  backgroundColor: Colors.white,
-                  child: Icon(Icons.lock_open, size: 40, color: Colors.black),
+      backgroundColor: Colors.white,
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(32.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.person_add_alt_1,
+                  size: 70, color: Color(0xFF1976D2)),
+              const SizedBox(height: 20),
+              Text(
+                "สมัครสมาชิก",
+                style: GoogleFonts.kanit(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF0D47A1),
                 ),
-                const SizedBox(height: 20),
-                Text(
-                  "เข้าสู่ระบบ",
+              ),
+              const SizedBox(height: 40),
+
+              _buildTextField(_nameController, "ชื่อ-นามสกุล", "กรอกชื่อของคุณ"),
+              const SizedBox(height: 16),
+              _buildTextField(
+                  _studentIdController, "รหัสนิสิต", "กรอกรหัสนิสิตของคุณ"),
+              const SizedBox(height: 16),
+              _buildTextField(_emailController, "อีเมล", "กรอกอีเมลของคุณ"),
+              const SizedBox(height: 16),
+              _buildTextField(_passwordController, "รหัสผ่าน", "ตั้งรหัสผ่าน",
+                  isPassword: true),
+              const SizedBox(height: 16),
+              _buildTextField(_confirmController, "ยืนยันรหัสผ่าน",
+                  "พิมพ์รหัสผ่านอีกครั้ง",
+                  isPassword: true),
+
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _register,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1976D2),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    elevation: 3,
+                  ),
+                  child: Text("สมัครสมาชิก",
+                      style: GoogleFonts.kanit(fontSize: 18)),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () =>
+                    Navigator.pushReplacementNamed(context, '/login'),
+                child: Text(
+                  "มีบัญชีอยู่แล้ว? เข้าสู่ระบบ",
                   style: GoogleFonts.kanit(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: const Color(0xFF1976D2),
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
-                const SizedBox(height: 40),
-
-                _buildTextField(
-                  _studentIdController,
-                  "รหัสนิสิต",
-                  "กรอกรหัสนิสิตของคุณ",
-                ),
-                const SizedBox(height: 16),
-                _buildTextField(
-                  _passwordController,
-                  "รหัสผ่าน",
-                  "กรอกรหัสผ่านของคุณ",
-                  isPassword: true,
-                ),
-
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _login,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.deepPurple,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: Text(
-                      "เข้าสู่ระบบ",
-                      style: GoogleFonts.kanit(fontSize: 18),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-                TextButton(
-                  onPressed: () {
-                    Navigator.pushReplacementNamed(context, '/register');
-                  },
-                  child: Text(
-                    "ยังไม่มีบัญชี? สมัครสมาชิก",
-                    style: GoogleFonts.kanit(color: Colors.white),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  /// ✅ ฟังก์ชันสร้าง TextField
-  Widget _buildTextField(
-    TextEditingController controller,
-    String label,
-    String hint, {
-    bool isPassword = false,
-  }) {
+  Widget _buildTextField(TextEditingController controller, String label,
+      String hint, {bool isPassword = false}) {
     return TextField(
       controller: controller,
       obscureText: isPassword,
       decoration: _inputDecoration(label, hint),
-      style: GoogleFonts.kanit(color: Colors.white),
+      style: GoogleFonts.kanit(color: Colors.black87),
     );
   }
 
@@ -188,11 +195,17 @@ class _LoginPageState extends State<LoginPage> {
     return InputDecoration(
       labelText: label,
       hintText: hint,
+      labelStyle: GoogleFonts.kanit(color: const Color(0xFF0D47A1)),
+      hintStyle: GoogleFonts.kanit(color: const Color(0xFF90A4AE)),
       filled: true,
-      fillColor: Colors.white.withOpacity(0.2),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-      labelStyle: GoogleFonts.kanit(color: Colors.white),
-      hintStyle: GoogleFonts.kanit(color: Colors.white70),
+      fillColor: Colors.grey[100],
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFFB0BEC5)),
+      ),
+      focusedBorder: const OutlineInputBorder(
+        borderSide: BorderSide(color: Color(0xFF1976D2), width: 2),
+      ),
     );
   }
 }
