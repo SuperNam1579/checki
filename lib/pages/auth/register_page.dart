@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../services/api_service.dart'; //
+import '../../services/api_service.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -17,7 +17,6 @@ class _RegisterPageState extends State<RegisterPage> {
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
 
-  /// ✅ ฟังก์ชันสมัครสมาชิก (เรียกผ่าน ApiService)
   Future<void> _register() async {
     final name = _nameController.text.trim();
     final studentId = _studentIdController.text.trim();
@@ -61,7 +60,6 @@ class _RegisterPageState extends State<RegisterPage> {
     }
   }
 
-  /// ✅ Popup แสดงผล
   void _showPopup(String message, Color color) {
     showDialog(
       context: context,
@@ -95,7 +93,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF6A11CB),
+                backgroundColor: const Color(0xFF1976D2), // 🔵 น้ำเงินเหมือน Login
                 foregroundColor: Colors.white,
                 padding:
                     const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
@@ -110,95 +108,86 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  /// ✅ UI ส่วนหน้าจอ
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const CircleAvatar(
-                  radius: 40,
-                  backgroundColor: Colors.white,
-                  child: Icon(Icons.person_add, size: 40, color: Colors.black),
+      backgroundColor: Colors.white, // 🟦 ขาวเหมือน Login
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(32.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.person_add_alt_1,
+                  size: 70, color: Color(0xFF1976D2)), // 🔵 ไอคอนน้ำเงินเข้ม
+              const SizedBox(height: 20),
+              Text(
+                "สมัครสมาชิก",
+                style: GoogleFonts.kanit(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF0D47A1), // 🔵 น้ำเงินเข้มเหมือน Login
                 ),
-                const SizedBox(height: 20),
-                Text(
-                  "สมัครสมาชิก",
+              ),
+              const SizedBox(height: 40),
+
+              _buildTextField(_nameController, "ชื่อ-นามสกุล", "กรอกชื่อของคุณ"),
+              const SizedBox(height: 16),
+              _buildTextField(
+                  _studentIdController, "รหัสนิสิต", "กรอกรหัสนิสิตของคุณ"),
+              const SizedBox(height: 16),
+              _buildTextField(_emailController, "อีเมล", "กรอกอีเมลของคุณ"),
+              const SizedBox(height: 16),
+              _buildTextField(_passwordController, "รหัสผ่าน", "ตั้งรหัสผ่าน",
+                  isPassword: true),
+              const SizedBox(height: 16),
+              _buildTextField(_confirmController, "ยืนยันรหัสผ่าน",
+                  "พิมพ์รหัสผ่านอีกครั้ง",
+                  isPassword: true),
+
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _register,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1976D2), // 🔵 น้ำเงินหลัก
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    elevation: 3,
+                  ),
+                  child: Text("สมัครสมาชิก",
+                      style: GoogleFonts.kanit(fontSize: 18)),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () =>
+                    Navigator.pushReplacementNamed(context, '/login'),
+                child: Text(
+                  "มีบัญชีอยู่แล้ว? เข้าสู่ระบบ",
                   style: GoogleFonts.kanit(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: const Color(0xFF1976D2),
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
-                const SizedBox(height: 40),
-
-                _buildTextField(_nameController, "ชื่อ-นามสกุล", "กรอกชื่อของคุณ"),
-                const SizedBox(height: 16),
-                _buildTextField(
-                    _studentIdController, "รหัสนิสิต", "กรอกรหัสนิสิตของคุณ"),
-                const SizedBox(height: 16),
-                _buildTextField(_emailController, "อีเมล", "กรอกอีเมลของคุณ"),
-                const SizedBox(height: 16),
-                _buildTextField(_passwordController, "รหัสผ่าน", "ตั้งรหัสผ่าน",
-                    isPassword: true),
-                const SizedBox(height: 16),
-                _buildTextField(_confirmController, "ยืนยันรหัสผ่าน",
-                    "พิมพ์รหัสผ่านอีกครั้ง",
-                    isPassword: true),
-
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _register,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.deepPurple,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                    ),
-                    child: Text("สมัครสมาชิก",
-                        style: GoogleFonts.kanit(fontSize: 18)),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextButton(
-                  onPressed: () =>
-                      Navigator.pushReplacementNamed(context, '/login'),
-                  child: Text(
-                    "มีบัญชีอยู่แล้ว? เข้าสู่ระบบ",
-                    style: GoogleFonts.kanit(color: Colors.white),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  /// ✅ ฟังก์ชันสร้าง TextField
   Widget _buildTextField(TextEditingController controller, String label,
       String hint, {bool isPassword = false}) {
     return TextField(
       controller: controller,
       obscureText: isPassword,
       decoration: _inputDecoration(label, hint),
-      style: GoogleFonts.kanit(color: Colors.white),
+      style: GoogleFonts.kanit(color: Colors.black87),
     );
   }
 
@@ -206,11 +195,17 @@ class _RegisterPageState extends State<RegisterPage> {
     return InputDecoration(
       labelText: label,
       hintText: hint,
+      labelStyle: GoogleFonts.kanit(color: const Color(0xFF0D47A1)),
+      hintStyle: GoogleFonts.kanit(color: const Color(0xFF90A4AE)),
       filled: true,
-      fillColor: Colors.white.withOpacity(0.2),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-      labelStyle: GoogleFonts.kanit(color: Colors.white),
-      hintStyle: GoogleFonts.kanit(color: Colors.white70),
+      fillColor: Colors.grey[100],
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFFB0BEC5)),
+      ),
+      focusedBorder: const OutlineInputBorder(
+        borderSide: BorderSide(color: Color(0xFF1976D2), width: 2),
+      ),
     );
   }
 }

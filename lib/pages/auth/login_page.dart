@@ -3,60 +3,41 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../services/api_service.dart';
 
-class RegisterPage extends StatefulWidget {
-  const RegisterPage({super.key});
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
 
   @override
-  State<RegisterPage> createState() => _RegisterPageState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
-class _RegisterPageState extends State<RegisterPage> {
-  final _nameController = TextEditingController();
-  final _studentIdController = TextEditingController();
+class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _confirmController = TextEditingController();
 
-  Future<void> _register() async {
-    final name = _nameController.text.trim();
-    final studentId = _studentIdController.text.trim();
+  Future<void> _login() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
-    final confirm = _confirmController.text.trim();
 
-    if (name.isEmpty ||
-        studentId.isEmpty ||
-        email.isEmpty ||
-        password.isEmpty ||
-        confirm.isEmpty) {
-      _showPopup("กรอกข้อมูลให้ครบทุกช่อง", Colors.redAccent);
-      return;
-    }
-
-    if (password != confirm) {
-      _showPopup("รหัสผ่านไม่ตรงกัน", Colors.redAccent);
+    if (email.isEmpty || password.isEmpty) {
+      _showPopup("กรอกอีเมลและรหัสผ่านให้ครบ", Colors.redAccent);
       return;
     }
 
     try {
-      final response = await ApiService.register({
-        'device_id': 'flutter_app_001',
-        'student_id': studentId,
-        'name': name,
+      final response = await ApiService.login({
         'email': email,
         'password': password,
-        'rePassword': confirm,
       });
 
       final data = jsonDecode(response.body);
 
-      if (response.statusCode == 201) {
-        _showPopup("สมัครสมาชิกสำเร็จ!", Colors.green);
+      if (response.statusCode == 200) {
+        _showPopup("เข้าสู่ระบบสำเร็จ!", Colors.green);
       } else {
-        _showPopup(data['message'] ?? "สมัครไม่สำเร็จ", Colors.redAccent);
+        _showPopup(data['message'] ?? "เข้าสู่ระบบไม่สำเร็จ", Colors.redAccent);
       }
     } catch (e) {
-      _showPopup("เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์", Colors.redAccent);
+      _showPopup("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้", Colors.redAccent);
     }
   }
 
@@ -89,7 +70,7 @@ class _RegisterPageState extends State<RegisterPage> {
               onPressed: () {
                 Navigator.pop(context);
                 if (color == Colors.green) {
-                  Navigator.pushReplacementNamed(context, '/login');
+                  Navigator.pushReplacementNamed(context, '/home');
                 }
               },
               style: ElevatedButton.styleFrom(
@@ -118,11 +99,11 @@ class _RegisterPageState extends State<RegisterPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.person_add_alt_1,
+              const Icon(Icons.lock_outline,
                   size: 70, color: Color(0xFF1976D2)),
               const SizedBox(height: 20),
               Text(
-                "สมัครสมาชิก",
+                "เข้าสู่ระบบ",
                 style: GoogleFonts.kanit(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
@@ -131,25 +112,16 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
               const SizedBox(height: 40),
 
-              _buildTextField(_nameController, "ชื่อ-นามสกุล", "กรอกชื่อของคุณ"),
-              const SizedBox(height: 16),
-              _buildTextField(
-                  _studentIdController, "รหัสนิสิต", "กรอกรหัสนิสิตของคุณ"),
-              const SizedBox(height: 16),
               _buildTextField(_emailController, "อีเมล", "กรอกอีเมลของคุณ"),
               const SizedBox(height: 16),
-              _buildTextField(_passwordController, "รหัสผ่าน", "ตั้งรหัสผ่าน",
-                  isPassword: true),
-              const SizedBox(height: 16),
-              _buildTextField(_confirmController, "ยืนยันรหัสผ่าน",
-                  "พิมพ์รหัสผ่านอีกครั้ง",
+              _buildTextField(_passwordController, "รหัสผ่าน", "กรอกรหัสผ่าน",
                   isPassword: true),
 
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _register,
+                  onPressed: _login,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF1976D2),
                     foregroundColor: Colors.white,
@@ -158,16 +130,16 @@ class _RegisterPageState extends State<RegisterPage> {
                         borderRadius: BorderRadius.circular(12)),
                     elevation: 3,
                   ),
-                  child: Text("สมัครสมาชิก",
-                      style: GoogleFonts.kanit(fontSize: 18)),
+                  child:
+                      Text("เข้าสู่ระบบ", style: GoogleFonts.kanit(fontSize: 18)),
                 ),
               ),
               const SizedBox(height: 16),
               TextButton(
                 onPressed: () =>
-                    Navigator.pushReplacementNamed(context, '/login'),
+                    Navigator.pushReplacementNamed(context, '/register'),
                 child: Text(
-                  "มีบัญชีอยู่แล้ว? เข้าสู่ระบบ",
+                  "ยังไม่มีบัญชี? สมัครสมาชิก",
                   style: GoogleFonts.kanit(
                     color: const Color(0xFF1976D2),
                     fontWeight: FontWeight.w500,
