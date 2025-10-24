@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -12,7 +14,8 @@ class _LoginPageState extends State<LoginPage> {
   final _studentIdController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  void _login() {
+  /// ✅ ฟังก์ชันเข้าสู่ระบบ (เรียกผ่าน AuthProvider → ApiService)
+  void _login() async {
     final studentId = _studentIdController.text.trim();
     final password = _passwordController.text;
 
@@ -21,10 +24,24 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
-    // ตัวอย่างจำลอง login สำเร็จ
-    _showPopup('เข้าสู่ระบบสำเร็จ', Colors.green);
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final success = await authProvider.login(studentId, password);
+
+      if (success) {
+        _showPopup('เข้าสู่ระบบสำเร็จ', Colors.green);
+        Future.delayed(const Duration(seconds: 1), () {
+          Navigator.pushReplacementNamed(context, '/home');
+        });
+      } else {
+        _showPopup('รหัสนิสิตหรือรหัสผ่านไม่ถูกต้อง', Colors.redAccent);
+      }
+    } catch (e) {
+      _showPopup('เกิดข้อผิดพลาดในการเชื่อมต่อ', Colors.redAccent);
+    }
   }
 
+  /// ✅ Popup แสดงผลการเข้าสู่ระบบ
   void _showPopup(String message, Color color) {
     showDialog(
       context: context,
@@ -34,7 +51,11 @@ class _LoginPageState extends State<LoginPage> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.check_circle, color: color, size: 60),
+            Icon(
+              color == Colors.green ? Icons.check_circle : Icons.error,
+              color: color,
+              size: 60,
+            ),
             const SizedBox(height: 16),
             Text(
               message,
@@ -46,12 +67,7 @@ class _LoginPageState extends State<LoginPage> {
             ),
             const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                if (color == Colors.green) {
-                  Navigator.pushReplacementNamed(context, '/home');
-                }
-              },
+              onPressed: () => Navigator.pop(context),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF6A11CB),
                 foregroundColor: Colors.white,
@@ -68,6 +84,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  /// ✅ ส่วน UI
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -83,35 +100,38 @@ class _LoginPageState extends State<LoginPage> {
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24.0),
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                const CircleAvatar(
+                  radius: 40,
+                  backgroundColor: Colors.white,
+                  child: Icon(Icons.lock_open, size: 40, color: Colors.black),
+                ),
+                const SizedBox(height: 20),
                 Text(
-                  "ระบบเช็คชื่อออนไลน์",
+                  "เข้าสู่ระบบ",
                   style: GoogleFonts.kanit(
-                    fontSize: 24,
+                    fontSize: 28,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
                 ),
                 const SizedBox(height: 40),
 
-                // รหัสนิสิต
-                TextField(
-                  controller: _studentIdController,
-                  decoration: _inputDecoration("รหัสนิสิต", "กรอกรหัสนิสิตของคุณ"),
-                  style: GoogleFonts.kanit(color: Colors.white),
+                _buildTextField(
+                  _studentIdController,
+                  "รหัสนิสิต",
+                  "กรอกรหัสนิสิตของคุณ",
                 ),
                 const SizedBox(height: 16),
-
-                // รหัสผ่าน
-                TextField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  decoration: _inputDecoration("รหัสผ่าน", "กรอกรหัสผ่านของคุณ"),
-                  style: GoogleFonts.kanit(color: Colors.white),
+                _buildTextField(
+                  _passwordController,
+                  "รหัสผ่าน",
+                  "กรอกรหัสผ่านของคุณ",
+                  isPassword: true,
                 ),
-                const SizedBox(height: 24),
 
-                // ปุ่มเข้าสู่ระบบ
+                const SizedBox(height: 24),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -130,9 +150,8 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
 
-                // ปุ่มสมัครสมาชิก
+                const SizedBox(height: 16),
                 TextButton(
                   onPressed: () {
                     Navigator.pushReplacementNamed(context, '/register');
@@ -147,6 +166,21 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ),
       ),
+    );
+  }
+
+  /// ✅ ฟังก์ชันสร้าง TextField
+  Widget _buildTextField(
+    TextEditingController controller,
+    String label,
+    String hint, {
+    bool isPassword = false,
+  }) {
+    return TextField(
+      controller: controller,
+      obscureText: isPassword,
+      decoration: _inputDecoration(label, hint),
+      style: GoogleFonts.kanit(color: Colors.white),
     );
   }
 

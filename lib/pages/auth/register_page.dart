@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../services/api_service.dart'; //
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -15,32 +17,71 @@ class _RegisterPageState extends State<RegisterPage> {
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
 
-  void _register() {
-    // ตอนนี้ยังไม่มี API – จำลองการสมัครสมาชิก
-    if (_passwordController.text != _confirmController.text) {
+  /// ✅ ฟังก์ชันสมัครสมาชิก (เรียกผ่าน ApiService)
+  Future<void> _register() async {
+    final name = _nameController.text.trim();
+    final studentId = _studentIdController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+    final confirm = _confirmController.text.trim();
+
+    if (name.isEmpty ||
+        studentId.isEmpty ||
+        email.isEmpty ||
+        password.isEmpty ||
+        confirm.isEmpty) {
+      _showPopup("กรอกข้อมูลให้ครบทุกช่อง", Colors.redAccent);
+      return;
+    }
+
+    if (password != confirm) {
       _showPopup("รหัสผ่านไม่ตรงกัน", Colors.redAccent);
       return;
     }
 
-    _showPopup("สมัครสมาชิกสำเร็จ!", Colors.green);
+    try {
+      final response = await ApiService.register({
+        'device_id': 'flutter_app_001',
+        'student_id': studentId,
+        'name': name,
+        'email': email,
+        'password': password,
+        'rePassword': confirm,
+      });
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 201) {
+        _showPopup("สมัครสมาชิกสำเร็จ!", Colors.green);
+      } else {
+        _showPopup(data['message'] ?? "สมัครไม่สำเร็จ", Colors.redAccent);
+      }
+    } catch (e) {
+      _showPopup("เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์", Colors.redAccent);
+    }
   }
 
+  /// ✅ Popup แสดงผล
   void _showPopup(String message, Color color) {
     showDialog(
-      context: context, // ✅ ต้องใช้ context ตรงนี้
+      context: context,
       builder: (context) => AlertDialog(
-        // ✅ ไม่ใช้ (_) แล้ว
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         contentPadding: const EdgeInsets.all(24),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.check_circle, color: color, size: 60),
+            Icon(
+              color == Colors.green ? Icons.check_circle : Icons.error,
+              color: color,
+              size: 60,
+            ),
             const SizedBox(height: 16),
             Text(
               message,
+              textAlign: TextAlign.center,
               style: GoogleFonts.kanit(
-                fontSize: 22,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: color,
               ),
@@ -56,13 +97,10 @@ class _RegisterPageState extends State<RegisterPage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF6A11CB),
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 40,
-                  vertical: 12,
-                ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
+                    borderRadius: BorderRadius.circular(10)),
               ),
               child: Text('ตกลง', style: GoogleFonts.kanit(fontSize: 16)),
             ),
@@ -72,6 +110,7 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
+  /// ✅ UI ส่วนหน้าจอ
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -105,56 +144,21 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 const SizedBox(height: 40),
 
-                // ชื่อ
-                TextField(
-                  controller: _nameController,
-                  decoration: _inputDecoration(
-                    "ชื่อ-นามสกุล",
-                    "กรอกชื่อของคุณ",
-                  ),
-                  style: GoogleFonts.kanit(color: Colors.white),
-                ),
+                _buildTextField(_nameController, "ชื่อ-นามสกุล", "กรอกชื่อของคุณ"),
                 const SizedBox(height: 16),
-                // รหัสนิสิต
-                TextField(
-                  controller: _studentIdController,
-                  decoration: _inputDecoration(
-                    "รหัสนิสิต",
-                    "กรอกรหัสนิสิตของคุณ",
-                  ),
-                  style: GoogleFonts.kanit(color: Colors.white),
-                ),
+                _buildTextField(
+                    _studentIdController, "รหัสนิสิต", "กรอกรหัสนิสิตของคุณ"),
                 const SizedBox(height: 16),
-                // อีเมล
-                TextField(
-                  controller: _emailController,
-                  decoration: _inputDecoration("อีเมล", "กรอกอีเมลของคุณ"),
-                  style: GoogleFonts.kanit(color: Colors.white),
-                ),
+                _buildTextField(_emailController, "อีเมล", "กรอกอีเมลของคุณ"),
                 const SizedBox(height: 16),
-
-                // รหัสผ่าน
-                TextField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  decoration: _inputDecoration("รหัสผ่าน", "ตั้งรหัสผ่าน"),
-                  style: GoogleFonts.kanit(color: Colors.white),
-                ),
+                _buildTextField(_passwordController, "รหัสผ่าน", "ตั้งรหัสผ่าน",
+                    isPassword: true),
                 const SizedBox(height: 16),
-
-                // ยืนยันรหัสผ่าน
-                TextField(
-                  controller: _confirmController,
-                  obscureText: true,
-                  decoration: _inputDecoration(
-                    "ยืนยันรหัสผ่าน",
+                _buildTextField(_confirmController, "ยืนยันรหัสผ่าน",
                     "พิมพ์รหัสผ่านอีกครั้ง",
-                  ),
-                  style: GoogleFonts.kanit(color: Colors.white),
-                ),
-                const SizedBox(height: 24),
+                    isPassword: true),
 
-                // ปุ่มสมัครสมาชิก
+                const SizedBox(height: 24),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -164,21 +168,16 @@ class _RegisterPageState extends State<RegisterPage> {
                       foregroundColor: Colors.deepPurple,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                          borderRadius: BorderRadius.circular(12)),
                     ),
-                    child: Text(
-                      "สมัครสมาชิก",
-                      style: GoogleFonts.kanit(fontSize: 18),
-                    ),
+                    child: Text("สมัครสมาชิก",
+                        style: GoogleFonts.kanit(fontSize: 18)),
                   ),
                 ),
-
                 const SizedBox(height: 16),
                 TextButton(
-                  onPressed: () {
-                    Navigator.pushReplacementNamed(context, '/login');
-                  },
+                  onPressed: () =>
+                      Navigator.pushReplacementNamed(context, '/login'),
                   child: Text(
                     "มีบัญชีอยู่แล้ว? เข้าสู่ระบบ",
                     style: GoogleFonts.kanit(color: Colors.white),
@@ -189,6 +188,17 @@ class _RegisterPageState extends State<RegisterPage> {
           ),
         ),
       ),
+    );
+  }
+
+  /// ✅ ฟังก์ชันสร้าง TextField
+  Widget _buildTextField(TextEditingController controller, String label,
+      String hint, {bool isPassword = false}) {
+    return TextField(
+      controller: controller,
+      obscureText: isPassword,
+      decoration: _inputDecoration(label, hint),
+      style: GoogleFonts.kanit(color: Colors.white),
     );
   }
 
