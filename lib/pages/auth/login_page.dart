@@ -9,46 +9,53 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final _emailController = TextEditingController();
+  final _studentIdController = TextEditingController();
   final _passwordController = TextEditingController();
 
   void _login() {
-    // ตอนนี้ยังไม่มี API ก็จำลองไว้ก่อน
-    _showLoginSuccessPopup(context);
+    final studentId = _studentIdController.text.trim();
+    final password = _passwordController.text;
+
+    if (studentId.isEmpty || password.isEmpty) {
+      _showPopup('กรุณากรอกข้อมูลให้ครบถ้วน', Colors.redAccent);
+      return;
+    }
+
+    // ตัวอย่างจำลอง login สำเร็จ
+    _showPopup('เข้าสู่ระบบสำเร็จ', Colors.green);
   }
 
-  void _showLoginSuccessPopup(BuildContext context) {
+  void _showPopup(String message, Color color) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         contentPadding: const EdgeInsets.all(24),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.check_circle, color: Colors.green, size: 60),
+            Icon(Icons.check_circle, color: color, size: 60),
             const SizedBox(height: 16),
             Text(
-              'เข้าสู่ระบบสำเร็จ!',
+              message,
               style: GoogleFonts.kanit(
-                fontSize: 22,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Colors.green[700],
+                color: color,
               ),
             ),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(context);
-                Navigator.pushReplacementNamed(context, '/home');
+                if (color == Colors.green) {
+                  Navigator.pushReplacementNamed(context, '/home');
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF6A11CB),
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 40,
-                  vertical: 12,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -76,64 +83,33 @@ class _LoginPageState extends State<LoginPage> {
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24.0),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const CircleAvatar(
-                  radius: 40,
-                  backgroundColor: Colors.white,
-                  child: Icon(Icons.check, size: 40, color: Colors.black),
-                ),
-                const SizedBox(height: 20),
                 Text(
-                  "เช็คชื่อ",
+                  "ระบบเช็คชื่อออนไลน์",
                   style: GoogleFonts.kanit(
-                    fontSize: 28,
+                    fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
                 ),
-                Text(
-                  "ระบบเช็คชื่อออนไลน์",
-                  style: GoogleFonts.kanit(color: Colors.white70, fontSize: 16),
-                ),
-                SizedBox(height: 40),
+                const SizedBox(height: 40),
 
-                // ช่องกรอกอีเมล
+                // รหัสนิสิต
                 TextField(
-                  controller: _emailController,
-                  decoration: InputDecoration(
-                    labelText: "อีเมล",
-                    hintText: "กรอกอีเมลของคุณ",
-                    filled: true,
-                    fillColor: Colors.white.withOpacity(0.2),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    labelStyle: GoogleFonts.kanit(color: Colors.white),
-                    hintStyle: GoogleFonts.kanit(color: Colors.white70),
-                  ),
+                  controller: _studentIdController,
+                  decoration: _inputDecoration("รหัสนิสิต", "กรอกรหัสนิสิตของคุณ"),
                   style: GoogleFonts.kanit(color: Colors.white),
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-                // ช่องกรอกรหัสผ่าน
+                // รหัสผ่าน
                 TextField(
                   controller: _passwordController,
                   obscureText: true,
-                  decoration: InputDecoration(
-                    labelText: "รหัสผ่าน",
-                    hintText: "กรอกรหัสผ่าน",
-                    filled: true,
-                    fillColor: Colors.white.withOpacity(0.2),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    labelStyle: GoogleFonts.kanit(color: Colors.white),
-                    hintStyle: GoogleFonts.kanit(color: Colors.white70),
-                  ),
+                  decoration: _inputDecoration("รหัสผ่าน", "กรอกรหัสผ่านของคุณ"),
                   style: GoogleFonts.kanit(color: Colors.white),
                 ),
-                SizedBox(height: 24),
+                const SizedBox(height: 24),
 
                 // ปุ่มเข้าสู่ระบบ
                 SizedBox(
@@ -154,13 +130,12 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
+
+                // ปุ่มสมัครสมาชิก
                 TextButton(
                   onPressed: () {
-                    Navigator.pushNamed(
-                      context,
-                      '/register',
-                    ); // ✅ ไปหน้า Register
+                    Navigator.pushReplacementNamed(context, '/register');
                   },
                   child: Text(
                     "ยังไม่มีบัญชี? สมัครสมาชิก",
@@ -172,6 +147,18 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ),
       ),
+    );
+  }
+
+  InputDecoration _inputDecoration(String label, String hint) {
+    return InputDecoration(
+      labelText: label,
+      hintText: hint,
+      filled: true,
+      fillColor: Colors.white.withOpacity(0.2),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      labelStyle: GoogleFonts.kanit(color: Colors.white),
+      hintStyle: GoogleFonts.kanit(color: Colors.white70),
     );
   }
 }
