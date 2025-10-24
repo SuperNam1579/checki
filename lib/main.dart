@@ -17,10 +17,9 @@ class CheckInApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'ระบบเช็คชื่อ',
 
-      // 
-      theme: ThemeData(
-        textTheme: GoogleFonts.kanitTextTheme(), // ใช้ฟ้อน Kanit ทั้งแอป
-      ),
+     theme: ThemeData(
+  textTheme: GoogleFonts.kanitTextTheme(), // ✅ ใช้ฟ้อน Kanit ทั้งแอป
+),
 
       initialRoute: '/login',
       routes: {

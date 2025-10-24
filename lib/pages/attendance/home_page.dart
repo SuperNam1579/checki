@@ -71,15 +71,15 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
-  gradient: LinearGradient(
-    colors: [
-      Color(0xFFFFA751), // ส้มพีชสดใส
-      Color(0xFFFFC3A0), // ครีมพาสเทลอบอุ่น
-    ],
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
-  ),
-),
+          gradient: LinearGradient(
+            colors: [
+              Color(0xFF6A11CB), // ม่วงเข้ม
+              Color(0xFF2575FC), // ฟ้าน้ำทะเล
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
 
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
         child: Column(
