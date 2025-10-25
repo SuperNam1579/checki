@@ -2,6 +2,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../services/api_service.dart';
+import "package:shared_preferences/shared_preferences.dart";
+import 'dart:io';
+import 'package:device_info_plus/device_info_plus.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -11,33 +14,62 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final _emailController = TextEditingController();
+  final _studentidController = TextEditingController();
   final _passwordController = TextEditingController();
 
   Future<void> _login() async {
-    final email = _emailController.text.trim();
+    final email = _studentidController.text.trim();
     final password = _passwordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
-      _showPopup("กรอกอีเมลและรหัสผ่านให้ครบ", Colors.redAccent);
+      _showPopup("กรอกรหัสนิสิตและรหัสผ่านให้ครบ", Colors.redAccent);
       return;
     }
 
     try {
+      final deviceId = await getDeviceId();
       final response = await ApiService.login({
-        'email': email,
+        'device_id': deviceId,
+        'student_id': email,
         'password': password,
       });
 
       final data = jsonDecode(response.body);
+      print("login data: $data");
 
       if (response.statusCode == 200) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString("user_id", data["user"]["id"]);
         _showPopup("เข้าสู่ระบบสำเร็จ!", Colors.green);
       } else {
         _showPopup(data['message'] ?? "เข้าสู่ระบบไม่สำเร็จ", Colors.redAccent);
       }
     } catch (e) {
+      print("error: $e");
       _showPopup("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้", Colors.redAccent);
+    }
+  }
+
+  // ✅ ดึง device_id จากเครื่อง (Android / iOS)
+  Future<String> getDeviceId() async {
+    final deviceInfo = DeviceInfoPlugin();
+    try {
+      if (Platform.isAndroid) {
+        final androidInfo = await deviceInfo.androidInfo;
+        // ✅ ใช้ androidId แทน id (รองรับ Android 10+)
+        return androidInfo.id ??
+            androidInfo.device ??
+            androidInfo.model ??
+            "unknown_android";
+      } else if (Platform.isIOS) {
+        final iosInfo = await deviceInfo.iosInfo;
+        return iosInfo.identifierForVendor ?? "unknown_ios";
+      } else {
+        return "unknown_device";
+      }
+    } catch (e) {
+      debugPrint("⚠️ ไม่สามารถดึง device_id ได้: $e");
+      return "unknown_device";
     }
   }
 
@@ -76,10 +108,13 @@ class _LoginPageState extends State<LoginPage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF1976D2),
                 foregroundColor: Colors.white,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 40,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
               child: Text('ตกลง', style: GoogleFonts.kanit(fontSize: 16)),
             ),
@@ -99,8 +134,11 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.lock_outline,
-                  size: 70, color: Color(0xFF1976D2)),
+              const Icon(
+                Icons.lock_outline,
+                size: 70,
+                color: Color(0xFF1976D2),
+              ),
               const SizedBox(height: 20),
               Text(
                 "เข้าสู่ระบบ",
@@ -112,10 +150,18 @@ class _LoginPageState extends State<LoginPage> {
               ),
               const SizedBox(height: 40),
 
-              _buildTextField(_emailController, "อีเมล", "กรอกอีเมลของคุณ"),
+              _buildTextField(
+                _studentidController,
+                "รหัสนิสิต",
+                "กรอกรหัสนิสิตของคุณ",
+              ),
               const SizedBox(height: 16),
-              _buildTextField(_passwordController, "รหัสผ่าน", "กรอกรหัสผ่าน",
-                  isPassword: true),
+              _buildTextField(
+                _passwordController,
+                "รหัสผ่าน",
+                "กรอกรหัสผ่าน",
+                isPassword: true,
+              ),
 
               const SizedBox(height: 24),
               SizedBox(
@@ -127,11 +173,14 @@ class _LoginPageState extends State<LoginPage> {
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     elevation: 3,
                   ),
-                  child:
-                      Text("เข้าสู่ระบบ", style: GoogleFonts.kanit(fontSize: 18)),
+                  child: Text(
+                    "เข้าสู่ระบบ",
+                    style: GoogleFonts.kanit(fontSize: 18),
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
@@ -153,8 +202,12 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label,
-      String hint, {bool isPassword = false}) {
+  Widget _buildTextField(
+    TextEditingController controller,
+    String label,
+    String hint, {
+    bool isPassword = false,
+  }) {
     return TextField(
       controller: controller,
       obscureText: isPassword,

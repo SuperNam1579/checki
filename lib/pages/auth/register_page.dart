@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../services/api_service.dart';
+import 'dart:io';
+import 'package:device_info_plus/device_info_plus.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -38,9 +40,32 @@ class _RegisterPageState extends State<RegisterPage> {
       return;
     }
 
+    Future<String> getDeviceId() async {
+      final deviceInfo = DeviceInfoPlugin();
+      try {
+        if (Platform.isAndroid) {
+          final androidInfo = await deviceInfo.androidInfo;
+          // ✅ ใช้ androidId แทน id (รองรับ Android 10+)
+          return androidInfo.id ??
+              androidInfo.device ??
+              androidInfo.model ??
+              "unknown_android";
+        } else if (Platform.isIOS) {
+          final iosInfo = await deviceInfo.iosInfo;
+          return iosInfo.identifierForVendor ?? "unknown_ios";
+        } else {
+          return "unknown_device";
+        }
+      } catch (e) {
+        debugPrint("⚠️ ไม่สามารถดึง device_id ได้: $e");
+        return "unknown_device";
+      }
+    }
+
     try {
+      final deviceId = await getDeviceId();
       final response = await ApiService.register({
-        'device_id': 'flutter_app_001',
+        'device_id': deviceId,
         'student_id': studentId,
         'name': name,
         'email': email,
@@ -93,12 +118,17 @@ class _RegisterPageState extends State<RegisterPage> {
                 }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF1976D2), // 🔵 น้ำเงินเหมือน Login
+                backgroundColor: const Color(
+                  0xFF1976D2,
+                ), // 🔵 น้ำเงินเหมือน Login
                 foregroundColor: Colors.white,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 40,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
               child: Text('ตกลง', style: GoogleFonts.kanit(fontSize: 16)),
             ),
@@ -118,8 +148,11 @@ class _RegisterPageState extends State<RegisterPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.person_add_alt_1,
-                  size: 70, color: Color(0xFF1976D2)), // 🔵 ไอคอนน้ำเงินเข้ม
+              const Icon(
+                Icons.person_add_alt_1,
+                size: 70,
+                color: Color(0xFF1976D2),
+              ), // 🔵 ไอคอนน้ำเงินเข้ม
               const SizedBox(height: 20),
               Text(
                 "สมัครสมาชิก",
@@ -131,19 +164,33 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
               const SizedBox(height: 40),
 
-              _buildTextField(_nameController, "ชื่อ-นามสกุล", "กรอกชื่อของคุณ"),
+              _buildTextField(
+                _nameController,
+                "ชื่อ-นามสกุล",
+                "กรอกชื่อของคุณ",
+              ),
               const SizedBox(height: 16),
               _buildTextField(
-                  _studentIdController, "รหัสนิสิต", "กรอกรหัสนิสิตของคุณ"),
+                _studentIdController,
+                "รหัสนิสิต",
+                "กรอกรหัสนิสิตของคุณ",
+              ),
               const SizedBox(height: 16),
               _buildTextField(_emailController, "อีเมล", "กรอกอีเมลของคุณ"),
               const SizedBox(height: 16),
-              _buildTextField(_passwordController, "รหัสผ่าน", "ตั้งรหัสผ่าน",
-                  isPassword: true),
+              _buildTextField(
+                _passwordController,
+                "รหัสผ่าน",
+                "ตั้งรหัสผ่าน",
+                isPassword: true,
+              ),
               const SizedBox(height: 16),
-              _buildTextField(_confirmController, "ยืนยันรหัสผ่าน",
-                  "พิมพ์รหัสผ่านอีกครั้ง",
-                  isPassword: true),
+              _buildTextField(
+                _confirmController,
+                "ยืนยันรหัสผ่าน",
+                "พิมพ์รหัสผ่านอีกครั้ง",
+                isPassword: true,
+              ),
 
               const SizedBox(height: 24),
               SizedBox(
@@ -155,11 +202,14 @@ class _RegisterPageState extends State<RegisterPage> {
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     elevation: 3,
                   ),
-                  child: Text("สมัครสมาชิก",
-                      style: GoogleFonts.kanit(fontSize: 18)),
+                  child: Text(
+                    "สมัครสมาชิก",
+                    style: GoogleFonts.kanit(fontSize: 18),
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
@@ -181,8 +231,12 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label,
-      String hint, {bool isPassword = false}) {
+  Widget _buildTextField(
+    TextEditingController controller,
+    String label,
+    String hint, {
+    bool isPassword = false,
+  }) {
     return TextField(
       controller: controller,
       obscureText: isPassword,
